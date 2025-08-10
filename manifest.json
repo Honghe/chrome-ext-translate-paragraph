@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "Paragraph Translator",
+  "version": "0.1",
+  "description": "Translate paragraphs on webpage with Shift + hover",
+  "permissions": [
+    "activeTab",
+    "scripting"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"]
+    }
+  ],
+  "background": {
+    "service_worker": "background.js"
+  }
+}
