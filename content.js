@@ -1,3 +1,62 @@
+// Store original attributes of anchors
+const anchorAttributesMap = new Map();
+let anchorIdCounter = 0;
+
+// Function to process HTML content before translation
+function preprocessHtml(htmlContent) {
+    const container = document.createElement('div');
+    container.innerHTML = htmlContent;
+    
+    // Process all anchor tags
+    const anchors = container.getElementsByTagName('a');
+    for (let anchor of Array.from(anchors)) {
+        // Save original attributes
+        const attributes = Array.from(anchor.attributes).reduce((acc, attr) => {
+            acc[attr.name] = attr.value;
+            return acc;
+        }, {});
+        
+        // Assign a unique id and store attributes
+        const uniqueId = anchorIdCounter++;
+        anchorAttributesMap.set(uniqueId, attributes);
+        
+        // Replace anchor with simplified version
+        const simplifiedAnchor = document.createElement('a');
+        simplifiedAnchor.id = uniqueId;
+        simplifiedAnchor.textContent = anchor.textContent;
+        anchor.replaceWith(simplifiedAnchor);
+    }
+    
+    return container.innerHTML;
+}
+
+// Function to restore HTML content after translation
+function postprocessHtml(htmlContent) {
+    const container = document.createElement('div');
+    container.innerHTML = htmlContent;
+    
+    // Process all anchor tags
+    const anchors = container.getElementsByTagName('a');
+    for (let anchor of Array.from(anchors)) {
+        const id = parseInt(anchor.id);
+        if (!isNaN(id) && anchorAttributesMap.has(id)) {
+            // Restore original attributes
+            const attributes = anchorAttributesMap.get(id);
+            const restoredAnchor = document.createElement('a');
+            restoredAnchor.textContent = anchor.textContent;
+            
+            for (let [attrName, attrValue] of Object.entries(attributes)) {
+                restoredAnchor.setAttribute(attrName, attrValue);
+            }
+            
+            anchor.replaceWith(restoredAnchor);
+            anchorAttributesMap.delete(id); // Cleanup
+        }
+    }
+    
+    return container.innerHTML;
+}
+
 // Track the currently hovered paragraph
 let currentParagraph = null;
 
@@ -42,18 +101,28 @@ async function translateParagraph(paragraph) {
     // Check if target is a paragraph and hasn't been translated yet
     if (paragraph.dataset.translated !== 'true') {
         console.log('[Translator] Processing paragraph element:', paragraph);
-        const originalText = paragraph.textContent
-            .split('\n')
-            .map(line => line.trim())
-            .filter(line => line.length > 0)
-            .join(' ');
-        console.log('[Translator] Text to translate:', originalText);
+        // First trim and clean the text
+        const container = document.createElement('div');
+        container.innerHTML = paragraph.innerHTML;
+        Array.from(container.childNodes).forEach(node => {
+            if (node.nodeType === Node.TEXT_NODE) {
+                node.textContent = node.textContent
+                    .split('\n')
+                    .map(line => line.trim())
+                    .filter(line => line.length > 0)
+                    .join(' ');
+            }
+        });
+
+        // Process HTML content before translation
+        const processedHtml = preprocessHtml(container.innerHTML);
+        console.log('[Translator] Processed HTML:', processedHtml);
         
         try {
             // Send translation request to background script
             const result = await new Promise((resolve, reject) => {
                 chrome.runtime.sendMessage(
-                    { action: 'translate', text: originalText },
+                    { action: 'translate', text: processedHtml },
                     response => {
                         if (response.success) {
                             resolve(response.data);
@@ -70,7 +139,9 @@ async function translateParagraph(paragraph) {
 
             // Create translation element
             const translationElement = document.createElement('div');
-            translationElement.textContent = translatedText;
+            // Restore HTML content after translation
+            const restoredHtml = postprocessHtml(translatedText);
+            translationElement.innerHTML = restoredHtml;
             translationElement.style.display = 'block';
             translationElement.style.marginTop = '10px';
             translationElement.style.color = '#333';
