@@ -93,17 +93,31 @@ document.addEventListener('keydown', async (e) => {
 
 // Function to handle translation
 async function translateParagraph(paragraph) {
-    console.log('[Translator] Paragraph check:', {
+    console.log('[Translator] Element check:', {
         tagName: paragraph.tagName,
-        isTranslated: paragraph.dataset.translated
+        isTranslated: paragraph.dataset.translated,
+        isListItem: paragraph.tagName.toLowerCase() === 'li'
     });
     
-    // Check if target is a paragraph and hasn't been translated yet
+    // Always preserve HTML, but handle list items specially
+    console.log('[Translator] Processing element:', paragraph);
+    
+    // Check if target hasn't been translated yet
     if (paragraph.dataset.translated !== 'true') {
-        console.log('[Translator] Processing paragraph element:', paragraph);
-        // First trim and clean the text
+        let textToTranslate;
+        
+        // Create a container for processing
         const container = document.createElement('div');
         container.innerHTML = paragraph.innerHTML;
+        
+        // If it's a list item, remove any nested lists before processing
+        if (paragraph.tagName.toLowerCase() === 'li') {
+            const nestedLists = container.querySelectorAll('ul, ol');
+            nestedLists.forEach(list => list.remove());
+            console.log('[Translator] Removed nested lists for processing');
+        }
+        
+        // Clean up text nodes
         Array.from(container.childNodes).forEach(node => {
             if (node.nodeType === Node.TEXT_NODE) {
                 node.textContent = node.textContent
@@ -113,16 +127,16 @@ async function translateParagraph(paragraph) {
                     .join(' ');
             }
         });
-
-        // Process HTML content before translation
-        const processedHtml = preprocessHtml(container.innerHTML);
-        console.log('[Translator] Processed HTML:', processedHtml);
         
+        // Process the cleaned HTML
+        textToTranslate = preprocessHtml(container.innerHTML);
+        
+        console.log('[Translator] Text to translate:', textToTranslate);
         try {
             // Send translation request to background script
             const result = await new Promise((resolve, reject) => {
                 chrome.runtime.sendMessage(
-                    { action: 'translate', text: processedHtml },
+                    { action: 'translate', text: textToTranslate },
                     response => {
                         if (response.success) {
                             resolve(response.data);
@@ -139,7 +153,6 @@ async function translateParagraph(paragraph) {
 
             // Create translation element
             const translationElement = document.createElement('div');
-            // Restore HTML content after translation
             const restoredHtml = postprocessHtml(translatedText);
             translationElement.innerHTML = restoredHtml;
             translationElement.style.display = 'block';

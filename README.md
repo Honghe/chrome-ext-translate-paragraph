@@ -14,3 +14,7 @@ This Chrome extension allows you to translate paragraphs on any webpage by hover
 1. Hover over any paragraph you want to translate
 2. Toggle the Shift key
 3. The translation will appear below the original text
+
+## Sample
+
+![](./image.png)
