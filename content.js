@@ -116,6 +116,13 @@ async function translateParagraph(paragraph) {
             nestedLists.forEach(list => list.remove());
             console.log('[Translator] Removed nested lists for processing');
         }
+
+        // If it contains <font class="notranslate immersive-translate-target-wrapper">, remove this child.
+        const notranslateElement = container.querySelector('.notranslate.immersive-translate-target-wrapper');
+        if (notranslateElement) {
+            notranslateElement.remove();
+            console.log('[Translator] Removed notranslate immersive-translate-target-wrapper element');
+        }
         
         // Clean up text nodes
         Array.from(container.childNodes).forEach(node => {
