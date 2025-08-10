@@ -2,9 +2,7 @@
 let currentParagraph = null;
 
 document.addEventListener('mouseover', (e) => {
-    if (e.target.tagName.toLowerCase() === 'p') {
-        currentParagraph = e.target;
-    }
+    currentParagraph = e.target;
 });
 
 document.addEventListener('mouseout', (e) => {
@@ -36,16 +34,13 @@ document.addEventListener('keydown', async (e) => {
 
 // Function to handle translation
 async function translateParagraph(paragraph) {
-    // More specific paragraph check
-    const isParagraph = paragraph.tagName.toLowerCase() === 'p';
     console.log('[Translator] Paragraph check:', {
-        isParagraph: isParagraph,
         tagName: paragraph.tagName,
         isTranslated: paragraph.dataset.translated
     });
     
     // Check if target is a paragraph and hasn't been translated yet
-    if (isParagraph && paragraph.dataset.translated !== 'true') {
+    if (paragraph.dataset.translated !== 'true') {
         console.log('[Translator] Processing paragraph element:', paragraph);
         const originalText = paragraph.textContent
             .split('\n')
