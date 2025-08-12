@@ -4,6 +4,7 @@ This Chrome extension allows you to translate paragraphs on any webpage by hover
 
 ## Features
 
+- Fast
 - Translate paragraphs with triggerKey + hover
 - Shows translation below the original text
 - Preserves original text

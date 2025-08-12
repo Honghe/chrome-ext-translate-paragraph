@@ -88,6 +88,8 @@ document.addEventListener('mouseout', (e) => {
 
 // Handle triggerKey key press for translation toggle
 document.addEventListener('keydown', async (e) => {
+    if (e.repeat) return;
+    
     if (
         e.key !== triggerKey ||
         !currentParagraph ||
