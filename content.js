@@ -91,7 +91,7 @@ document.addEventListener('keydown', async (e) => {
     if (
         e.key !== triggerKey ||
         !currentParagraph ||
-        ['input', 'textarea'].includes(currentParagraph.tagName.toLowerCase())
+        ['input', 'textarea', 'code'].includes(currentParagraph.tagName.toLowerCase())
     ) return;
 
     console.log('[Translator] triggerKey pressed while hovering paragraph');
