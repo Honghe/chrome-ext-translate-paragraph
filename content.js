@@ -89,7 +89,7 @@ document.addEventListener('mouseout', (e) => {
 // Handle triggerKey key press for translation toggle
 document.addEventListener('keydown', async (e) => {
     if (e.repeat) return;
-    
+
     if (
         e.key !== triggerKey ||
         !currentParagraph ||
@@ -178,6 +178,10 @@ async function translateParagraph(paragraph) {
             });
             
             console.log('[Translator] Received translation data:', result);
+
+            // if the original text is in Chinese, don't present the translation.
+            if (result[1][0] === 'zh-CN') return;
+
             const translatedText = result[0][0];
             console.log('[Translator] Processed translated text:', translatedText);
 
