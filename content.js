@@ -1,6 +1,22 @@
 // Store original attributes of anchors
 const anchorAttributesMap = new Map();
 let anchorIdCounter = 0;
+const STORAGE_KEY = 'triggerKey';
+let triggerKey = 'Control'; // default
+
+// Load the current setting from storage
+async function loadSetting() {
+  const result = await chrome.storage.sync.get(STORAGE_KEY);
+  triggerKey = result[STORAGE_KEY] ?? 'Control';
+  console.log('[Content] Loaded modifier key:', triggerKey);
+}
+
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area === 'sync' && changes[STORAGE_KEY]) {
+    triggerKey = changes[STORAGE_KEY].newValue;
+    console.log('[Content] Updated triggerKey to', triggerKey);
+  }
+});
 
 // Function to process HTML content before translation
 function preprocessHtml(htmlContent) {
@@ -70,10 +86,10 @@ document.addEventListener('mouseout', (e) => {
     }
 });
 
-// Handle shift key press for translation toggle
+// Handle triggerKey key press for translation toggle
 document.addEventListener('keydown', async (e) => {
-    if (e.key === 'Shift' && currentParagraph) {
-        console.log('[Translator] Shift pressed while hovering paragraph');
+    if (e.key === triggerKey && currentParagraph) {
+        console.log('[Translator] triggerKey pressed while hovering paragraph');
         const isTranslated = currentParagraph.dataset.translated === 'true';
         
         if (isTranslated) {
@@ -181,3 +197,6 @@ async function translateParagraph(paragraph) {
         }
     }
 };
+
+// Initialize
+loadSetting().catch(err => console.error('Error loading setting:', err));

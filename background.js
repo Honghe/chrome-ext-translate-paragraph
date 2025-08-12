@@ -4,8 +4,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         fetch("https://translate-pa.googleapis.com/v1/translateHtml", {
             method: "POST",
             headers: {
-                "accept": "*/*",
-                "accept-language": "en-US,en;q=0.9,zh-CN;q=0.8,zh;q=0.7",
                 "content-type": "application/json+protobuf",
                 "x-goog-api-key": "AIzaSyATBXajvzQLTDHEQbcpq0Ihe0vWDHmO520"
             },

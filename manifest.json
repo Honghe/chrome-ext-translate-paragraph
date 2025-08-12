@@ -5,7 +5,8 @@
   "description": "Translate paragraphs on webpage with Shift + hover",
   "permissions": [
     "activeTab",
-    "scripting"
+    "scripting",
+    "storage"
   ],
   "content_scripts": [
     {
@@ -15,5 +16,8 @@
   ],
   "background": {
     "service_worker": "background.js"
-  }
+  },
+  "action": {
+   "default_popup": "popup.html"
+ }
 }
