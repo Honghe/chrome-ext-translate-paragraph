@@ -88,22 +88,27 @@ document.addEventListener('mouseout', (e) => {
 
 // Handle triggerKey key press for translation toggle
 document.addEventListener('keydown', async (e) => {
-    if (e.key === triggerKey && currentParagraph) {
-        console.log('[Translator] triggerKey pressed while hovering paragraph');
-        const isTranslated = currentParagraph.dataset.translated === 'true';
-        
-        if (isTranslated) {
-            // Remove translation
-            const nextElement = currentParagraph.nextElementSibling;
-            if (nextElement && nextElement.className === 'translation-text') {
-                nextElement.remove();
-            }
-            currentParagraph.dataset.translated = 'false';
-            console.log('[Translator] Removed translation');
-        } else {
-            // Add translation
-            await translateParagraph(currentParagraph);
+    if (
+        e.key !== triggerKey ||
+        !currentParagraph ||
+        ['input', 'textarea'].includes(currentParagraph.tagName.toLowerCase())
+    ) return;
+
+    console.log('[Translator] triggerKey pressed while hovering paragraph');
+
+    const isTranslated = currentParagraph.dataset.translated === 'true';
+
+    if (isTranslated) {
+        // Remove translation
+        const nextEl = currentParagraph.nextElementSibling;
+        if (nextEl?.classList.contains('translation-text')) {
+            nextEl.remove();
         }
+        currentParagraph.dataset.translated = 'false';
+        console.log('[Translator] Removed translation');
+    } else {
+        // Add translation
+        await translateParagraph(currentParagraph);
     }
 });
 
