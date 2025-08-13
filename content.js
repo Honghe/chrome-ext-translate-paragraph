@@ -140,11 +140,18 @@ async function translateParagraph(paragraph) {
             console.log('[Translator] Removed nested lists for processing');
         }
 
-        // If it contains <font class="notranslate immersive-translate-target-wrapper">, remove this child.
+        // If it contains notranslate `immersive-translate` element, remove this child.
         const notranslateElement = container.querySelector('.notranslate.immersive-translate-target-wrapper');
         if (notranslateElement) {
             notranslateElement.remove();
             console.log('[Translator] Removed notranslate immersive-translate-target-wrapper element');
+        }
+
+        // If it contains notranslate `kiss-translator` element, remove this child.
+        const kissTranslatorElement = container.querySelector('kiss-translator');
+        if (kissTranslatorElement) {
+            kissTranslatorElement.remove();
+            console.log('[Translator] Removed notranslate kiss-translator element');
         }
         
         // Clean up text nodes
