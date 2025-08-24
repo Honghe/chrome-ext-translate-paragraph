@@ -87,9 +87,12 @@ function isEditableElement(el) {
 function isTextParagraph(el) {
     if (!el) return false;
     const tag = el.tagName.toLowerCase();
-    if (['p', 'div', 'li'].includes(tag)) return true;
+    if (['p', 'div', 'li', 'td', 'th', 'dd', 'dt', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'].includes(tag)) return true;
     // Only treat span as a paragraph if it's a top-level container
-    if (tag === 'span' && (!el.parentElement || !['p', 'div', 'li', 'section', 'article'].includes(el.parentElement.tagName.toLowerCase()))) {
+    if (tag === 'span'
+        && (!el.parentElement
+            || !['p', 'div', 'li', 'td', 'th', 'dd', 'dt', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'section', 'article']
+                .includes(el.parentElement.tagName.toLowerCase()))) {
         return true;
     }
     return false;
@@ -129,8 +132,8 @@ document.addEventListener('keydown', async (e) => {
     if (
         e.key !== triggerKey ||
         !currentParagraph ||
-        isEditableElement(currentParagraph) ||
-        isNoTranslateElement(currentParagraph)
+        isEditableElement(currentParagraph)
+        // isNoTranslateElement(currentParagraph)
     ) return;
 
     console.log('[Translator] triggerKey pressed while hovering paragraph');
