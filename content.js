@@ -142,9 +142,11 @@ document.addEventListener('keydown', async (e) => {
 
     if (isTranslated) {
         // Remove translation
-        const nextEl = currentParagraph.nextElementSibling;
-        if (nextEl?.classList.contains('translation-text')) {
-            nextEl.remove();
+        const translationChild = Array.from(currentParagraph.children).find(
+            el => el.className === 'translation-text'
+        );
+        if (translationChild) {
+            translationChild.remove();
         }
         currentParagraph.dataset.translated = 'false';
         console.log('[Translator] Removed translation');
@@ -180,23 +182,21 @@ async function translateParagraph(paragraph) {
             console.log('[Translator] Removed nested lists for processing');
         }
 
-        // If it contains notranslate `immersive-translate` element, remove this child.
-        const notranslateElement = container.querySelector('.notranslate.immersive-translate-target-wrapper');
-        if (notranslateElement) {
-            notranslateElement.remove();
-            console.log('[Translator] Removed notranslate immersive-translate-target-wrapper element');
-        }
-
-        // If it contains notranslate `kiss-translator` element, remove this child.
-        const kissTranslatorElement = container.querySelector('kiss-translator');
-        if (kissTranslatorElement) {
-            kissTranslatorElement.remove();
-            console.log('[Translator] Removed notranslate kiss-translator element');
-        }
-
-        // Clean up text nodes
+        // Clean up text nodes, skipping translation elements
         Array.from(container.childNodes).forEach(node => {
-            if (node.nodeType === Node.TEXT_NODE) {
+            // Skip translation elements
+            if (node.nodeType === Node.ELEMENT_NODE) {
+                if (node.classList && node.classList.contains('translation-text')) {
+                    node.remove();
+                    console.log('[Translator] Removed translation element');
+                } else if (node.classList && node.classList.contains('immersive-translate-target-wrapper')) {
+                    node.remove();
+                    console.log('[Translator] Removed immersive-translate-target-wrapper element');
+                } else if (node.tagName.toLowerCase() === 'kiss-translator') {
+                    node.remove();
+                    console.log('[Translator] Removed kiss-translator element');
+                }
+            } else if (node.nodeType === Node.TEXT_NODE) {
                 node.textContent = node.textContent
                     .split('\n')
                     .map(line => line.trim())
@@ -243,9 +243,9 @@ async function translateParagraph(paragraph) {
             translationElement.className = 'translation-text';
             console.log('[Translator] Created translation element:', translationElement);
 
-            // Insert translation after original paragraph
-            paragraph.parentNode.insertBefore(translationElement, paragraph.nextSibling);
-            console.log('[Translator] Inserted translation into DOM');
+            // Insert translation as a child of the original element
+            paragraph.appendChild(translationElement);
+            console.log('[Translator] Appended translation as child');
 
             // Mark paragraph as translated
             paragraph.dataset.translated = 'true';
