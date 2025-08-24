@@ -6,23 +6,23 @@ let triggerKey = 'Control'; // default
 
 // Load the current setting from storage
 async function loadSetting() {
-  const result = await chrome.storage.sync.get(STORAGE_KEY);
-  triggerKey = result[STORAGE_KEY] ?? 'Control';
-  console.log('[Content] Loaded modifier key:', triggerKey);
+    const result = await chrome.storage.sync.get(STORAGE_KEY);
+    triggerKey = result[STORAGE_KEY] ?? 'Control';
+    console.log('[Content] Loaded modifier key:', triggerKey);
 }
 
 chrome.storage.onChanged.addListener((changes, area) => {
-  if (area === 'sync' && changes[STORAGE_KEY]) {
-    triggerKey = changes[STORAGE_KEY].newValue;
-    console.log('[Content] Updated triggerKey to', triggerKey);
-  }
+    if (area === 'sync' && changes[STORAGE_KEY]) {
+        triggerKey = changes[STORAGE_KEY].newValue;
+        console.log('[Content] Updated triggerKey to', triggerKey);
+    }
 });
 
 // Function to process HTML content before translation
 function preprocessHtml(htmlContent) {
     const container = document.createElement('div');
     container.innerHTML = htmlContent;
-    
+
     // Process all anchor tags
     const anchors = container.getElementsByTagName('a');
     for (let anchor of Array.from(anchors)) {
@@ -31,18 +31,18 @@ function preprocessHtml(htmlContent) {
             acc[attr.name] = attr.value;
             return acc;
         }, {});
-        
+
         // Assign a unique id and store attributes
         const uniqueId = anchorIdCounter++;
         anchorAttributesMap.set(uniqueId, attributes);
-        
+
         // Replace anchor with simplified version
         const simplifiedAnchor = document.createElement('a');
         simplifiedAnchor.id = uniqueId;
         simplifiedAnchor.textContent = anchor.textContent;
         anchor.replaceWith(simplifiedAnchor);
     }
-    
+
     return container.innerHTML;
 }
 
@@ -50,7 +50,7 @@ function preprocessHtml(htmlContent) {
 function postprocessHtml(htmlContent) {
     const container = document.createElement('div');
     container.innerHTML = htmlContent;
-    
+
     // Process all anchor tags
     const anchors = container.getElementsByTagName('a');
     for (let anchor of Array.from(anchors)) {
@@ -60,24 +60,71 @@ function postprocessHtml(htmlContent) {
             const attributes = anchorAttributesMap.get(id);
             const restoredAnchor = document.createElement('a');
             restoredAnchor.textContent = anchor.textContent;
-            
+
             for (let [attrName, attrValue] of Object.entries(attributes)) {
                 restoredAnchor.setAttribute(attrName, attrValue);
             }
-            
+
             anchor.replaceWith(restoredAnchor);
             anchorAttributesMap.delete(id); // Cleanup
         }
     }
-    
+
     return container.innerHTML;
 }
+
+// Determine if the element is editable
+function isEditableElement(el) {
+    if (!el) return false;
+    const tag = el.tagName.toLowerCase();
+    if (['input', 'textarea', 'select'].includes(tag)) return true;
+    if (el.isContentEditable) return true;
+    if (el.getAttribute('role') === 'textbox') return true;
+    return false;
+}
+
+// Determine if the element is a paragraph-like text container
+function isTextParagraph(el) {
+    if (!el) return false;
+    const tag = el.tagName.toLowerCase();
+    if (['p', 'div', 'li'].includes(tag)) return true;
+    // Only treat span as a paragraph if it's a top-level container
+    if (tag === 'span' && (!el.parentElement || !['p', 'div', 'li', 'section', 'article'].includes(el.parentElement.tagName.toLowerCase()))) {
+        return true;
+    }
+    return false;
+}
+
+// Determine if the element is a non-translatable container
+function isNoTranslateElement(el) {
+    return el.tagName.toLowerCase() !== 'label' && el.closest('form') !== null;
+}
+
+// Get the paragraph under the mouse and exclude editable elements
+document.addEventListener('mouseover', function (e) {
+    let el = e.target;
+    // Traverse upwards to find the nearest paragraph-like element
+    while (el && !isTextParagraph(el)) {
+        el = el.parentElement;
+    }
+    // Return early if no paragraph found or the element is editable
+    if (!el || isEditableElement(el)) return;
+});
 
 // Track the currently hovered paragraph
 let currentParagraph = null;
 
 document.addEventListener('mouseover', (e) => {
-    currentParagraph = e.target;
+    let el = e.target;
+    // Traverse upwards to find the nearest paragraph-like element
+    while (el && !isTextParagraph(el)) {
+        el = el.parentElement;
+    }
+    // Return early if no paragraph found
+    if (!el) return;
+
+    currentParagraph = el;
+    console.log('[Translator] Hovering over paragraph:', currentParagraph);
 });
 
 document.addEventListener('mouseout', (e) => {
@@ -93,8 +140,8 @@ document.addEventListener('keydown', async (e) => {
     if (
         e.key !== triggerKey ||
         !currentParagraph ||
-        ['input', 'textarea', 'code'].includes(currentParagraph.tagName.toLowerCase()) ||
-        (currentParagraph.tagName.toLowerCase() !== 'label' && currentParagraph.closest('form') !== null)
+        isEditableElement(currentParagraph) ||
+        isNoTranslateElement(currentParagraph)
     ) return;
 
     console.log('[Translator] triggerKey pressed while hovering paragraph');
@@ -122,18 +169,18 @@ async function translateParagraph(paragraph) {
         isTranslated: paragraph.dataset.translated,
         isListItem: paragraph.tagName.toLowerCase() === 'li'
     });
-    
+
     // Always preserve HTML, but handle list items specially
     console.log('[Translator] Processing element:', paragraph);
-    
+
     // Check if target hasn't been translated yet
     if (paragraph.dataset.translated !== 'true') {
         let textToTranslate;
-        
+
         // Create a container for processing
         const container = document.createElement('div');
         container.innerHTML = paragraph.innerHTML;
-        
+
         // If it's a list item, remove any nested lists before processing
         if (paragraph.tagName.toLowerCase() === 'li') {
             const nestedLists = container.querySelectorAll('ul, ol');
@@ -154,7 +201,7 @@ async function translateParagraph(paragraph) {
             kissTranslatorElement.remove();
             console.log('[Translator] Removed notranslate kiss-translator element');
         }
-        
+
         // Clean up text nodes
         Array.from(container.childNodes).forEach(node => {
             if (node.nodeType === Node.TEXT_NODE) {
@@ -165,10 +212,10 @@ async function translateParagraph(paragraph) {
                     .join(' ');
             }
         });
-        
+
         // Process the cleaned HTML
         textToTranslate = preprocessHtml(container.innerHTML);
-        
+
         console.log('[Translator] Text to translate:', textToTranslate);
         try {
             // Send translation request to background script
@@ -184,7 +231,7 @@ async function translateParagraph(paragraph) {
                     }
                 );
             });
-            
+
             console.log('[Translator] Received translation data:', result);
 
             // if the original text is in Chinese, don't present the translation.
@@ -207,7 +254,7 @@ async function translateParagraph(paragraph) {
             // Insert translation after original paragraph
             paragraph.parentNode.insertBefore(translationElement, paragraph.nextSibling);
             console.log('[Translator] Inserted translation into DOM');
-            
+
             // Mark paragraph as translated
             paragraph.dataset.translated = 'true';
             console.log('[Translator] Marked paragraph as translated');
