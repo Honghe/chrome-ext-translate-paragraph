@@ -100,17 +100,6 @@ function isNoTranslateElement(el) {
     return el.tagName.toLowerCase() !== 'label' && el.closest('form') !== null;
 }
 
-// Get the paragraph under the mouse and exclude editable elements
-document.addEventListener('mouseover', function (e) {
-    let el = e.target;
-    // Traverse upwards to find the nearest paragraph-like element
-    while (el && !isTextParagraph(el)) {
-        el = el.parentElement;
-    }
-    // Return early if no paragraph found or the element is editable
-    if (!el || isEditableElement(el)) return;
-});
-
 // Track the currently hovered paragraph
 let currentParagraph = null;
 
