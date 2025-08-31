@@ -156,6 +156,34 @@ document.addEventListener('keydown', async (e) => {
     }
 });
 
+// Clean up text nodes, skipping translation elements
+function cleanNodes(nodes) {
+    Array.from(nodes).forEach(node => {
+        // Skip translation elements
+        if (node.nodeType === Node.ELEMENT_NODE) {
+            if (node.classList && node.classList.contains('translation-text')) {
+                node.remove();
+                console.log('[Translator] Removed translation element');
+            } else if (node.classList && node.classList.contains('immersive-translate-target-wrapper')) {
+                node.remove();
+                console.log('[Translator] Removed immersive-translate-target-wrapper element');
+            } else if (node.tagName.toLowerCase() === 'kiss-translator') {
+                node.remove();
+                console.log('[Translator] Removed kiss-translator element');
+            } else {
+                // Recursively clean child nodes
+                cleanNodes(node.childNodes);
+            }
+        } else if (node.nodeType === Node.TEXT_NODE) {
+            node.textContent = node.textContent
+                .split('\n')
+                .map(line => line.trim())
+                .filter(line => line.length > 0)
+                .join(' ');
+        }
+    });
+}
+
 // Function to handle translation
 async function translateParagraph(paragraph) {
     console.log('[Translator] Element check:', {
@@ -182,28 +210,7 @@ async function translateParagraph(paragraph) {
             console.log('[Translator] Removed nested lists for processing');
         }
 
-        // Clean up text nodes, skipping translation elements
-        Array.from(container.childNodes).forEach(node => {
-            // Skip translation elements
-            if (node.nodeType === Node.ELEMENT_NODE) {
-                if (node.classList && node.classList.contains('translation-text')) {
-                    node.remove();
-                    console.log('[Translator] Removed translation element');
-                } else if (node.classList && node.classList.contains('immersive-translate-target-wrapper')) {
-                    node.remove();
-                    console.log('[Translator] Removed immersive-translate-target-wrapper element');
-                } else if (node.tagName.toLowerCase() === 'kiss-translator') {
-                    node.remove();
-                    console.log('[Translator] Removed kiss-translator element');
-                }
-            } else if (node.nodeType === Node.TEXT_NODE) {
-                node.textContent = node.textContent
-                    .split('\n')
-                    .map(line => line.trim())
-                    .filter(line => line.length > 0)
-                    .join(' ');
-            }
-        });
+        cleanNodes(container.childNodes);
 
         // Process the cleaned HTML
         textToTranslate = preprocessHtml(container.innerHTML);
