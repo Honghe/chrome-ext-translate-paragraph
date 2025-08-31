@@ -80,6 +80,10 @@ function isEditableElement(el) {
     if (['input', 'textarea', 'select'].includes(tag)) return true;
     if (el.isContentEditable) return true;
     if (el.getAttribute('role') === 'textbox') return true;
+    // Recursively check children
+    for (let child of el.children) {
+        if (isEditableElement(child)) return true;
+    }
     return false;
 }
 
@@ -87,13 +91,8 @@ function isEditableElement(el) {
 function isTextParagraph(el) {
     if (!el) return false;
     const tag = el.tagName.toLowerCase();
-    if (['p', 'div', 'li', 'td', 'th', 'dd', 'dt', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'span'].includes(tag)) return true;
+    if (['p', 'div', 'li', 'td', 'th', 'dd', 'dt', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'span', 'label'].includes(tag)) return true;
     return false;
-}
-
-// Determine if the element is a non-translatable container
-function isNoTranslateElement(el) {
-    return el.tagName.toLowerCase() !== 'label' && el.closest('form') !== null;
 }
 
 // Track the currently hovered paragraph
@@ -126,7 +125,6 @@ document.addEventListener('keydown', async (e) => {
         e.key !== triggerKey ||
         !currentParagraph ||
         isEditableElement(currentParagraph)
-        // isNoTranslateElement(currentParagraph)
     ) return;
 
     console.log('[Translator] triggerKey pressed while hovering paragraph');
