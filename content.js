@@ -87,14 +87,14 @@ function isEditableElement(el) {
 function isTextParagraph(el) {
     if (!el) return false;
     const tag = el.tagName.toLowerCase();
-    if (['p', 'div', 'li', 'td', 'th', 'dd', 'dt', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'].includes(tag)) return true;
+    if (['p', 'div', 'li', 'td', 'th', 'dd', 'dt', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'span'].includes(tag)) return true;
     // Only treat span as a paragraph if it's a top-level container
-    if (tag === 'span'
-        && (!el.parentElement
-            || !['p', 'div', 'li', 'td', 'th', 'dd', 'dt', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'section', 'article']
-                .includes(el.parentElement.tagName.toLowerCase()))) {
-        return true;
-    }
+    // if (tag === 'span'
+    //     && (!el.parentElement
+    //         || !['p', 'div', 'li', 'td', 'th', 'dd', 'dt', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'section', 'article']
+    //             .includes(el.parentElement.tagName.toLowerCase()))) {
+    //     return true;
+    // }
     return false;
 }
 
