@@ -143,7 +143,7 @@ document.addEventListener('keydown', async (e) => {
     if (isTranslated) {
         // Remove translation
         const translationChild = Array.from(currentParagraph.children).find(
-            el => el.className === 'translation-text'
+            el => el.tagName.toLowerCase() === 'blink-translator'
         );
         if (translationChild) {
             translationChild.remove();
@@ -161,7 +161,7 @@ function cleanNodes(nodes) {
     Array.from(nodes).forEach(node => {
         // Skip translation elements
         if (node.nodeType === Node.ELEMENT_NODE) {
-            if (node.classList && node.classList.contains('translation-text')) {
+            if (node.tagName.toLowerCase() === 'blink-translator') {
                 node.remove();
                 console.log('[Translator] Removed translation element');
             } else if (node.classList && node.classList.contains('immersive-translate-target-wrapper')) {
@@ -240,14 +240,13 @@ async function translateParagraph(paragraph) {
             console.log('[Translator] Processed translated text:', translatedText);
 
             // Create translation element
-            const translationElement = document.createElement('div');
+            const translationElement = document.createElement('blink-translator');
             const restoredHtml = postprocessHtml(translatedText);
             translationElement.innerHTML = restoredHtml;
             translationElement.style.display = 'block';
-            translationElement.style.marginTop = '10px';
-            translationElement.style.color = '#333';
-            translationElement.style.fontStyle = 'normal';
-            translationElement.className = 'translation-text';
+            // translationElement.style.marginTop = '10px';
+            // translationElement.style.color = '#333';
+            // translationElement.style.fontStyle = 'normal';
             console.log('[Translator] Created translation element:', translationElement);
 
             // Insert translation as a child of the original element
